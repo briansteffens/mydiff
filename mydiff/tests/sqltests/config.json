@@ -1,0 +1,14 @@
+{
+    "db1": {
+        "host": "localhost",
+        "user": "root",
+        "pass": "rootpass",
+        "dbname": "sqltests_1"
+    },
+    "db2": {
+        "host": "localhost",
+        "user": "root",
+        "pass": "rootpass",
+        "dbname": "sqltests_2"
+    }
+}

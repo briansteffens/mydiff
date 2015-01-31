@@ -1,0 +1,18 @@
+# vi: set ft=sql :
+
+<both>
+    create table B
+    (
+        id integer auto_increment
+    ,   name varchar(32)
+    
+    ,   primary key (id)
+    );
+
+<old>
+
+<new>
+    insert into B (name) values ('abc');
+
+<expected>
+    insert into `B` (`id`,`name`) values (1,'abc');

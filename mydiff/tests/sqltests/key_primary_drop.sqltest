@@ -1,0 +1,7 @@
+# vi: set ft=sql :
+
+<both>
+    create table B (a integer, b integer, primary key(a));
+
+<new>
+    alter table B drop primary key;

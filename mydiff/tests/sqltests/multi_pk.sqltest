@@ -1,0 +1,18 @@
+# vi: set ft=sql :
+
+<both>
+    create table B
+    (
+        name varchar(32)
+    ,   num integer
+    ,   something varchar(64)
+
+    ,   primary key (name, num)
+    );
+    insert into B (name,num,something) values ('abc',1,'hello');
+    insert into B (name,num,something) values ('abc',2,'hi');
+
+<new>
+    update B set something='salutations' where name='abc' and num=1;
+    delete from B where name='abc' and num=2;
+    insert into B (name,num,something) values ('def',1,'greetings');

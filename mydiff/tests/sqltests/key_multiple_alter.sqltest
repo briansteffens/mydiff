@@ -1,0 +1,7 @@
+# vi: set ft=sql :
+
+<both>
+    create table B (a int, b int, key(a));
+
+<new>
+    alter table B drop key a,add index b (b);

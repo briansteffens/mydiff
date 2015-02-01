@@ -1,0 +1,7 @@
+# vi: set ft=sql :
+
+<both>
+    create table B (name varchar(32), primary key (name));
+
+<new>
+    drop table B;

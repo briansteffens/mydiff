@@ -1,0 +1,4 @@
+# vi: set ft=sql :
+
+<new>
+    create table B (id int(11) not null auto_increment,primary key(id));

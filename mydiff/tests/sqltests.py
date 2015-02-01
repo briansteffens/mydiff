@@ -1,3 +1,54 @@
+"""
+sqltests
+
+Acceptance tests for mydiff
+
+For each test, two empty databases will be created: old and new. Each test
+should make new differ from old in some unique way and then verify that mydiff
+generates the correct SQL to make old match new.
+
+All files matching TESTDIR/*.sqltest will be loaded as tests. Each test file is
+of the following form:
+
+```
+<both>
+    create table T
+    (
+        id integer auto_increment
+    ,   name varchar(32)
+
+    ,   primary key (id)
+    );
+<new>
+    insert into T (name) values ('abc');
+```
+
+In the test above, both databases start with an empty table T. A row is added
+to T in the 'new' database but not 'old'. mydiff is executed against the
+databases, and its output is compared against <new>: if mydiff generates the
+same SQL code that was actually used to differentiate the databases, the test
+passes.
+
+The .sqltest format can be expanded to the following full form:
+
+```
+<both>
+    # Code to be run on both old and new databases (executes first)
+<old>
+    # Code to be run only on the old database (executes second)
+<new>
+    # Code to be run only on the new database (executes third)
+    # Also the expected SQL output of mydiff if <expected> is not present
+<expected>
+    # The expected SQL output of mydiff if it differs from <new> or <new> is
+    # not present.
+```
+
+All <headers> are individually optional, however at least one of <new> or 
+<expected> is required.
+
+"""
+
 import os
 
 import pymysql
@@ -78,14 +129,15 @@ def run(sqltest, db1, db2):
     def cleanup(p):
         return [l.strip() for l in p if l.strip() != '']
 
-    expected = cleanup(test['expected'].split('\n'))
+    exp = test['new'] if 'expected' not in test else test['expected']
+    expected = cleanup(exp.split('\n'))
     actual = cleanup([line for line in __compare(conf())])
 
     for i in range(len(expected)):
         if expected[i] != actual[i]:
             def _out(o):
                 for l in o:
-                    print(o)
+                    print(l)
             print("\nTest failed.")
             print("Expected changes:")
             _out(expected)

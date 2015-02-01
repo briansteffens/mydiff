@@ -1,0 +1,4 @@
+# vi: set ft=sql :
+
+<new>
+    create table B (id int(11),key(id));

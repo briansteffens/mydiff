@@ -1,0 +1,7 @@
+# vi: set ft=sql :
+
+<both>
+    create table B (a int, b int, unique key(a));
+
+<new>
+    alter table B drop key a,add constraint b unique key(b);

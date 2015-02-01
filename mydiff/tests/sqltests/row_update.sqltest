@@ -9,10 +9,7 @@
     ,   primary key (id)
     );
 
-<old>
-
-<new>
     insert into B (name) values ('abc');
 
-<expected>
-    insert into `B` (`id`,`name`) values (1,'abc');
+<new>
+    update B set name='def' where id=1;

@@ -99,14 +99,25 @@ class Key(object):
 
 
 
+class ForeignKey(Key):
+    def __init__(self, table, parts, fkdetails):
+        super().__init__(table, parts)
+
+        self.name = fkdetail['CONSTRAINT_NAME']
+        self.ref_table_name = fkdetail['REFERENCED_TABLE_NAME']
+        self.ref_column_name = fkdetail['REFERENCED_COLUMN_NAME']
+
+
+
 class Table(object):
     def __init__(self, db, name):
         self.db = db
         self.name = name
         self.columns = [Column(r) for r in self.db.res('describe '+name+';')]
 
-        parts = [KeyPart(r) for r in self.db.res('show keys from '+name+';')]
-        
+        # Get key info
+        parts = [KeyPart(r) for r in self.db.res('show keys from '+name+';')] 
+
         keys = OrderedDict()
         for part in parts:
             if not part.name in keys:
@@ -115,6 +126,23 @@ class Table(object):
         self.keys = [Key(self,keys[k]) for k in keys]
         
         self.pks = [col for col in self.columns if col.pk]
+
+        # 'show keys' doesn't fully explain foreign keys so supplement it here
+        fks = self.db.res('select table_name,column_name,constraint_name,'+
+                          'referenced_table_name,referenced_column_name '+
+                          'from information_schema.key_column_usage '+
+                          "where table_name = '"+name+"' and "+
+                          'referenced_column_name is not null;')
+
+        fkdetails = OrderedDict()
+        for fkdetail in fks:
+            fkname = fkdetail['constraint_name']
+            if not fkname in fkdetails:
+                fkdetails[fkname] = []
+            fkdetails[fkname].append(
+        for k,v in itertools.groupby(fks, lambda x: x['constraint_name']))
+        #print(",".join([key.name for key in self.keys]))
+        #print('\n'.join([str(fk) for fk in fks])+'\n')
 
     def column(self, name):
         for col in self.columns:

@@ -1,0 +1,8 @@
+# vi: set ft=sql :
+
+<both>
+    create table b (id int primary key, a int not null, b int not null,
+                    index idx_b_ab (a,b));
+
+<new>
+    alter table b drop key idx_b_ab;

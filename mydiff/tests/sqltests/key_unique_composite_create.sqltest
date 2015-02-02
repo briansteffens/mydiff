@@ -1,0 +1,7 @@
+# vi: set ft=sql :
+
+<both>
+    create table b (id int primary key, a int not null, b int not null);
+
+<new>
+    alter table b add index idx_b_ab (a,b);

@@ -103,9 +103,13 @@ class ForeignKey(Key):
     def __init__(self, table, parts, fkdetails):
         super().__init__(table, parts)
 
-        self.name = fkdetail['CONSTRAINT_NAME']
-        self.ref_table_name = fkdetail['REFERENCED_TABLE_NAME']
-        self.ref_column_name = fkdetail['REFERENCED_COLUMN_NAME']
+        self.kind = 'foreign'
+        self.name = fkdetails[0]['constraint_name']
+        self.ref_table_name = fkdetails[0]['referenced_table_name']
+
+        self.refs = {}
+        for fkd in fkdetails:
+            self.refs[fkd['column_name']]=fkd['referenced_column_name']
 
 
 
@@ -132,6 +136,7 @@ class Table(object):
                           'referenced_table_name,referenced_column_name '+
                           'from information_schema.key_column_usage '+
                           "where table_name = '"+name+"' and "+
+                          "table_schema='"+self.db.name+"' and "+
                           'referenced_column_name is not null;')
 
         fkdetails = OrderedDict()
@@ -139,8 +144,15 @@ class Table(object):
             fkname = fkdetail['constraint_name']
             if not fkname in fkdetails:
                 fkdetails[fkname] = []
-            fkdetails[fkname].append(
-        for k,v in itertools.groupby(fks, lambda x: x['constraint_name']))
+            fkdetails[fkname].append(fkdetail)
+        for k in fkdetails:
+            key = self.key(k)
+            newkey = ForeignKey(self, key.parts, fkdetails[k])
+            for i in range(len(self.keys)):
+                if self.keys[i] is key:
+                    self.keys[i] = newkey
+            if self.keys[i] is not newkey:
+                raise Exception('Unable to replace key with fk')
         #print(",".join([key.name for key in self.keys]))
         #print('\n'.join([str(fk) for fk in fks])+'\n')
 
@@ -169,7 +181,8 @@ class Table(object):
 
 
 class Database(object):
-    def __init__(self, conn):
+    def __init__(self, conn, name):
+        self.name = name
         self.conn = conn
         self.tablenames=[str(r[k]) for r in self.res('show tables;') for k in r]
         self.tables = [Table(self, tn) for tn in self.tablenames]
@@ -329,7 +342,12 @@ class SqlRenderer(object):
 
     def key(self, k):
         kind = k.kind+' ' if k.kind != 'multiple' else ''
-        return kind+'key('+self.keycols(k)+')'
+        ret = kind+'key('+self.keycols(k)+')'
+        if k.kind == 'foreign':
+            ret += ' references '+self.name(k.ref_table_name)+\
+                   '('+','.join([self.name(k.refs[p.colname]) 
+                                for p in k.parts])+')'
+        return ret
 
     def keymod(self, km):
         action = km[0]
@@ -339,7 +357,8 @@ class SqlRenderer(object):
             if key.primary:
                 return 'drop primary key'
             else:
-                return 'drop key '+self.name(key)
+                foreign = 'foreign ' if key.kind == 'foreign' else ''
+                return 'drop '+foreign+'key '+self.name(key)
         elif action == 'add':
             if key.primary:
                 return 'add '+self.key(key)
@@ -548,8 +567,8 @@ def compare_databases(render, db1, db2):
 def __compare(config):
     with connect(config['db1']) as conn1:
         with connect(config['db2']) as conn2:
-            db1 = Database(conn1)
-            db2 = Database(conn2) 
+            db1 = Database(conn1, config['db1']['dbname'])
+            db2 = Database(conn2, config['db2']['dbname']) 
 
             render = SqlRenderer()
 

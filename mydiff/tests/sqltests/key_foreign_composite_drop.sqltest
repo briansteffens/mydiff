@@ -1,0 +1,14 @@
+# vi: set ft=sql :
+
+<both>
+    create table b (a int, b int, primary key(a,b));
+    create table c (id int primary key, a int, b int,
+                    constraint fk_c_b foreign key(a,b) references b(a,b));
+
+<new>
+    alter table c drop foreign key fk_c_b;
+
+<expected>
+    # sort of strange, when dropping a composite foreign key mysql apparently
+    # does remove the constraint but leaves an index?
+    alter table c drop foreign key fk_c_b,add index fk_c_b (a,b);

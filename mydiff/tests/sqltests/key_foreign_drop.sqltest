@@ -1,0 +1,9 @@
+# vi: set ft=sql :
+
+<both>
+    create table b (id int primary key, name varchar(32));
+    create table c (id int primary key, b_id int, 
+                    constraint fk_c_b foreign key(b_id) references b(id));
+
+<new>
+    alter table c drop foreign key fk_c_b,add index fk_c_b (b_id);

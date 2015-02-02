@@ -157,4 +157,5 @@ if __name__ == '__main__':
 
         with connect(conf()['db1']) as conn1:
             with connect(conf()['db2']) as conn2:
-                run(sqltest, Database(conn1), Database(conn2))
+                run(sqltest, Database(conn1, conf()['db1']['dbname']), 
+			     Database(conn2, conf()['db2']['dbname']))
